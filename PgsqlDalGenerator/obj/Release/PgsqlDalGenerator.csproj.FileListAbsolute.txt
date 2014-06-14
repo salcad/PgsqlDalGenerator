@@ -1,0 +1,15 @@
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\obj\Release\ResolveAssemblyReference.cache
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\bin\PgsqlDalGenerator.dll
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\bin\PgsqlDalGenerator.pdb
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\bin\Extend.Lib.Common.dll
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\bin\Extend.Lib.NamingConverter.dll
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\bin\Extend.Lib.Npgsql.dll
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\bin\PgsqlMetadataExtract.dll
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\bin\Npgsql.dll
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\bin\Mono.Security.dll
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\bin\Extend.Lib.Common.pdb
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\bin\Extend.Lib.NamingConverter.pdb
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\bin\Extend.Lib.Npgsql.pdb
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\bin\PgsqlMetadataExtract.pdb
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\obj\Release\PgsqlDalGenerator.dll
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlDalGenerator\obj\Release\PgsqlDalGenerator.pdb

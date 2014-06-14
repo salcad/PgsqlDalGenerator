@@ -1,0 +1,429 @@
+﻿<#@ template hostspecific="True"#>
+
+<#@ assembly name="$(SolutionDir)PgsqlMetadataExtract\bin\PgsqlMetadataExtract.dll"#>
+<#@ assembly name="$(SolutionDir)Extend.Lib.Npgsql\bin\Extend.Lib.Npgsql.dll"#>
+<#@ assembly name="$(SolutionDir)Extend.Lib.NamingConverter\bin\Extend.Lib.NamingConverter.dll"#>
+
+<#@ import namespace="PgsqlMetadataExtract"#>
+<#@ import namespace="System.Collections.Generic"#>
+<#@ import namespace="Extend.Lib.NamingConverter" #>
+
+<#
+    string tableName ="test_completes";
+	string connectionString = 
+	"Server=192.168.8.90;Port=5432;User Id=postgres;Password=1234;Database=postgres;";
+    
+	ExtractTableMetadatas metadatas = new ExtractTableMetadatas(connectionString,tableName);
+#>
+
+<# Write("/*"); #>
+   
+CREATE OR REPLACE FUNCTION public.<#=tableName#>_insert (
+       <#int i = 1; 
+          PushIndent("\t");
+		  foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			if (metadatas.Table.TableFields.Count-1 > i)
+			{
+			  if (metadatas.Table.PrimaryKey.Trim().ToLower() != item.ColumnName.Trim().ToLower())
+			  {
+			    if (i==1) WriteLine(" p_"+item.ColumnName + " " + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");  	
+			    else WriteLine("\tp_"+item.ColumnName + " " + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");
+			    i++;
+			  }
+			} 
+			else
+			{
+			   WriteLine("\tp_"+item.ColumnName + " " + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) );  
+		    }
+		   }
+		   PopIndent();PopIndent();PopIndent();
+		#>
+)
+RETURNS integer AS
+$body$
+DECLARE
+    identity int;
+
+BEGIN
+
+    INSERT
+	INTO <#=tableName#>
+	(
+		  <# i = 1; 
+          PushIndent("\t");
+		  foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			if (metadatas.Table.TableFields.Count-1 > i)
+			{
+			  if (metadatas.Table.PrimaryKey.Trim().ToLower() != item.ColumnName.Trim().ToLower())
+			  {
+			    if (i==1) WriteLine(item.ColumnName + ",");  	
+			    else WriteLine("\t  "+item.ColumnName + ",");
+			    i++;
+			  }
+			} 
+			else
+			{
+			  WriteLine("\t  "+item.ColumnName);
+		    }
+		   }
+		   PopIndent();PopIndent();PopIndent();
+		#>
+	)
+	VALUES
+	(
+		 <# i = 1; 
+          PushIndent("\t");
+		  foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			if (metadatas.Table.TableFields.Count-1 > i)
+			{
+			  if (metadatas.Table.PrimaryKey.Trim().ToLower() != item.ColumnName.Trim().ToLower())
+			  {
+			    if (i==1) WriteLine(" p_"+item.ColumnName + ",");  	
+			    else WriteLine("\t  p_"+item.ColumnName + ",");
+			    i++;
+			  }
+			} 
+			else
+			{
+			   WriteLine("\t  p_"+item.ColumnName);
+		    }
+		   }
+		   PopIndent();PopIndent();PopIndent();
+		#>
+	)
+
+    RETURNING  <#=metadatas.Table.PrimaryKey#> INTO identity;
+    RETURN identity;
+
+END;
+$body$
+LANGUAGE 'plpgsql'
+VOLATILE
+CALLED ON NULL INPUT
+SECURITY INVOKER
+COST 100;
+
+	
+
+CREATE OR REPLACE FUNCTION public.<#=tableName#>_update_by_pk (
+        <# i = 1; 
+          PushIndent("\t");
+		  foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			if (metadatas.Table.TableFields.Count-1 >= i)
+			{
+			    if (i==1) WriteLine("p_"+item.ColumnName + " " + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");  	
+			    else WriteLine("\tp_"+item.ColumnName + " " + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");
+			    i++;
+			} 
+			else
+			{
+			   WriteLine("\tp_"+item.ColumnName + " " + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) );  
+		    }
+		   }
+		   PopIndent();PopIndent();PopIndent();
+		#>
+)
+RETURNS integer AS
+$body$
+DECLARE
+  rows_affected int;
+  
+BEGIN 
+  
+    UPDATE <#=tableName#>
+	SET
+		<# i = 1; 
+          PushIndent("\t");
+		  foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			if (metadatas.Table.TableFields.Count-1 > i)
+			{
+			  if (metadatas.Table.PrimaryKey.Trim().ToLower() != item.ColumnName.Trim().ToLower())
+			  {
+			    if (i==1) WriteLine(item.ColumnName + " = p_" + item.ColumnName + ",");  	
+			    else WriteLine("\t"+item.ColumnName + " = p_" + item.ColumnName + ",");
+			    i++;
+			  }
+			} 
+			else
+			{
+			  WriteLine("\t"+item.ColumnName + " = p_" + item.ColumnName);
+		    }
+		   }
+		   PopIndent();PopIndent();PopIndent();
+		#>
+	WHERE
+		<#=metadatas.Table.PrimaryKey#> = p_<#=metadatas.Table.PrimaryKey#>;
+  
+  GET DIAGNOSTICS rows_affected = ROW_COUNT;
+  RETURN rows_affected;
+   
+  EXCEPTION WHEN unique_violation THEN
+  RETURN 0;
+  
+END;
+$body$
+LANGUAGE 'plpgsql'
+VOLATILE
+CALLED ON NULL INPUT
+SECURITY INVOKER
+COST 100;	
+
+	
+CREATE OR REPLACE FUNCTION public.<#=tableName#>_delete_by_pk (
+  p_<#=metadatas.Table.PrimaryKey#> <#=metadatas.GetDataTypeByColumnName(metadatas.Table.PrimaryKey)#>
+)
+RETURNS integer AS
+$body$
+DECLARE
+  rows_affected int;
+BEGIN
+  
+    DELETE
+	FROM <#=tableName#>
+	WHERE
+		<#=metadatas.Table.PrimaryKey#> = p_<#=metadatas.Table.PrimaryKey#>;
+  
+  GET DIAGNOSTICS rows_affected = ROW_COUNT; 
+  RETURN rows_affected; 
+   
+END;
+$body$
+LANGUAGE 'plpgsql'
+VOLATILE
+CALLED ON NULL INPUT
+SECURITY INVOKER
+COST 100;	
+
+
+CREATE OR REPLACE FUNCTION public.<#=tableName#>_get_by_pk (
+   p_<#=metadatas.Table.PrimaryKey#> <#=metadatas.GetDataTypeByColumnName(metadatas.Table.PrimaryKey)#>
+)
+RETURNS TABLE (
+        <# i = 1; 
+          PushIndent("\t");
+		  foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			if (metadatas.Table.TableFields.Count-1 >= i)
+			{
+			 
+			    if (i==1) WriteLine(item.ColumnName + " " + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");  	
+			    else WriteLine("\t"+item.ColumnName + " " + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");
+			    i++;
+			} 
+			else
+			{
+			   WriteLine("\t"+item.ColumnName + " " + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) );  
+		    }
+		   }
+		   PopIndent();PopIndent();PopIndent();
+		#>
+) AS
+$body$
+BEGIN  
+    
+	    RETURN QUERY 
+	    SELECT  
+		<# i = 1; 
+	          PushIndent("\t");
+			  foreach (TableField item in metadatas.Table.TableFields)
+	          {	
+				if (metadatas.Table.TableFields.Count-1 >= i)
+				{
+				 
+				    if (i==1) WriteLine("c."+item.ColumnName + "::" + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");  	
+				    else WriteLine("\tc."+item.ColumnName + "::" + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");
+				    i++;
+				} 
+				else
+				{
+				   WriteLine("\tp_"+item.ColumnName + "::" + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) );  
+			    }
+			   }
+			   PopIndent();PopIndent();PopIndent();
+			#>
+	    FROM  <#=tableName#> c
+	    WHERE <#=metadatas.Table.PrimaryKey#> = p_<#=metadatas.Table.PrimaryKey#>;
+		
+   
+END;
+$body$
+LANGUAGE 'plpgsql'
+VOLATILE
+CALLED ON NULL INPUT
+SECURITY INVOKER
+COST 100 ROWS 1000;
+
+
+CREATE OR REPLACE FUNCTION public.<#=tableName#>_get_by_id(
+  p_<#=NamingConverter.ConvertPK2ID(metadatas.Table.PrimaryKey,false)#> varchar, 
+  p_match_option varchar
+)
+RETURNS TABLE (
+       <#i=1;Write("\t");
+		foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			if (metadatas.Table.TableFields.Count-1 >= i)
+			{
+			  WriteLine(item.ColumnName + " " + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");
+			  i++;
+			} 
+			else
+			{
+			   WriteLine(item.ColumnName + " " + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) );  
+		    }
+			Write("\t\t");
+		   }
+		#>
+		
+) AS
+$body$
+
+BEGIN  
+
+    IF (LOWER(p_match_option)='exact') THEN
+	  RETURN QUERY 
+      SELECT  
+	  <# i = 1; 
+          PushIndent("\t");
+		  foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			if (metadatas.Table.TableFields.Count-1 >= i)
+			{
+			 
+			    if (i==1) WriteLine("\tc."+item.ColumnName + "::" + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");  	
+			    else WriteLine("\tc."+item.ColumnName + "::" + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");
+			    i++;
+			} 
+			else
+			{
+			   WriteLine("\tc."+item.ColumnName + "::" + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) );  
+		    }
+		   }
+		   PopIndent();PopIndent();PopIndent();
+	   #>
+       FROM  <#=tableName#> c
+       WHERE LOWER(c.<#=NamingConverter.ConvertPK2ID(metadatas.Table.PrimaryKey,false)#>)=lower(p_<#=NamingConverter.ConvertPK2ID(metadatas.Table.PrimaryKey,false)#>);
+	ELSE
+	  RETURN QUERY 
+      SELECT  
+	  <# i = 1; 
+          PushIndent("\t");
+		  foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			if (metadatas.Table.TableFields.Count-1 >= i)
+			{
+			 
+			    if (i==1) WriteLine("\tc."+item.ColumnName + "::" + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");  	
+			    else WriteLine("\tc."+item.ColumnName + "::" + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");
+			    i++;
+			} 
+			else
+			{
+			   WriteLine("\tc."+item.ColumnName + "::" + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) );  
+		    }
+		   }
+		   PopIndent();PopIndent();PopIndent();
+	   #>
+	   FROM  <#=tableName#> c
+       WHERE c.<#=NamingConverter.ConvertPK2ID(metadatas.Table.PrimaryKey,false)#> ILIKE '%'||p_<#=NamingConverter.ConvertPK2ID(metadatas.Table.PrimaryKey,false)#>||'%';
+	END IF;  
+
+END;
+$body$
+LANGUAGE 'plpgsql'
+VOLATILE
+CALLED ON NULL INPUT
+SECURITY INVOKER
+
+
+
+<#if (metadatas.GetFirstTimeStampColumn().Trim().Length == 0) goto NoTimeStamp;#>
+
+CREATE OR REPLACE FUNCTION public.<#=tableName#>_get_by_date (
+  p_start_date varchar,
+  p_end_date varchar
+)
+RETURNS TABLE (
+    <#i=1;Write("\t");
+		foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			if (metadatas.Table.TableFields.Count-1 >= i)
+			{
+			  WriteLine(item.ColumnName + " " + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");
+			} 
+			else
+			{
+			   WriteLine(item.ColumnName + " " + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) );  
+		    }
+			i++;
+			if ((metadatas.Table.TableFields.Count+1)!=i) 
+				Write("\t\t");
+		   }
+		#>)
+AS
+$body$
+BEGIN  
+
+      RETURN QUERY 
+      SELECT 
+	  	<# i=1;Write("\t"); 
+          foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			if (metadatas.Table.TableFields.Count-1 >= i)
+			{
+			    WriteLine("c."+item.ColumnName + "::" + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) + ",");
+			    
+			} 
+			else
+			{
+			   WriteLine("c."+item.ColumnName + "::" + PgsqlMetadataHelper.LongPg2ShortPg(item.DataType) );  
+		    }
+			i++;
+			if ((metadatas.Table.TableFields.Count+1)!=i) 
+				Write("\t\t\t");
+		   }
+	    #>
+	   FROM  <#=tableName#> c
+       WHERE c.<#=metadatas.GetFirstTimeStampColumn()#>::date 
+       BETWEEN p_start_date::date 
+       AND p_end_date::date;
+	
+
+END;
+$body$
+LANGUAGE 'plpgsql'
+VOLATILE
+CALLED ON NULL INPUT
+SECURITY INVOKER
+COST 100 ROWS 1000;
+
+<#NoTimeStamp: #>
+
+
+CREATE OR REPLACE FUNCTION public.<#=tableName#>_get_all(
+  p_order_by varchar
+)
+RETURNS SETOF public.test_completes AS
+$body$
+BEGIN
+
+      RETURN QUERY EXECUTE '
+      SELECT *
+      FROM   <#=tableName#>
+      ORDER  BY ' || quote_ident(p_order_by) || '; ';
+
+END;
+$body$
+LANGUAGE 'plpgsql'
+VOLATILE
+CALLED ON NULL INPUT
+SECURITY INVOKER
+COST 100 ROWS 1000;
+
+
+<# Write("*/"); #>

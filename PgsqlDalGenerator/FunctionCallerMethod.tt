@@ -1,0 +1,132 @@
+﻿<#@ template hostspecific="True"#>
+
+<#@ assembly name="$(SolutionDir)PgsqlMetadataExtract\bin\PgsqlMetadataExtract.dll"#>
+<#@ assembly name="$(SolutionDir)Extend.Lib.Npgsql\bin\Extend.Lib.Npgsql.dll"#>
+<#@ assembly name="$(SolutionDir)Extend.Lib.NamingConverter\bin\Extend.Lib.NamingConverter.dll"#>
+
+<#@ import namespace="PgsqlMetadataExtract"#>
+<#@ import namespace="System.Collections.Generic"#>
+<#@ import namespace="Extend.Lib.NamingConverter" #>
+
+<#
+    List<FuncArgItem> funcArgList = new List<FuncArgItem>();
+	List<FuncArgItem> funcArgInputList = new List<FuncArgItem>();
+	List<FuncArgItem> funcArgOutputList = new List<FuncArgItem>();
+	
+	string csDataTypeForReturnValue;
+	string methodName ="test_completes_get_all";
+	string connectionString = 
+	"Server=192.168.8.88;Port=5432;User Id=postgres;Password=1234;Database=postgres;";
+    
+	ExtractFunctionArgs dl = new ExtractFunctionArgs(connectionString);
+    funcArgList = dl.GetAll(methodName, "public");
+	csDataTypeForReturnValue = dl.GetCsDataTypeForReturnValue(funcArgList);
+	funcArgList = dl.GetAllMinusReturnValue(funcArgList);
+	funcArgInputList  = dl.GetAllForInputDirection(funcArgList);
+	funcArgOutputList = dl.GetAllForOutputDirection(funcArgList);
+#>
+
+<# Write("/*"); #>
+
+        public <#=csDataTypeForReturnValue#> <#=NamingConverter.Pg2Pascal(methodName)#>(
+		<# int i = 0; 
+          PushIndent("\t");
+		  foreach(FuncArgItem item in funcArgInputList)
+          {	
+			i++;
+			if (funcArgInputList.Count > i)
+			{
+			  Write(item.CsDataType + " " + NamingConverter.PgFPar2Camel(item.ArgName) + ","); 
+			} else
+			{
+			  WriteLine(item.CsDataType.Trim() + " " + NamingConverter.PgFPar2Camel(item.ArgName) + ")");
+			  
+			} 
+		   }
+		   PopIndent();PopIndent();PopIndent();
+		#>
+        <#WriteLine("{");#>
+		     <# if (csDataTypeForReturnValue=="DataTable")
+				{WriteLine("DataTable dt = new DataTable();"); }
+				else if (csDataTypeForReturnValue=="int")
+			    {WriteLine("int rowsAffected = 0;");}
+				else if (csDataTypeForReturnValue=="string")
+			    {WriteLine("string result = string.Empty;");}
+		        else if (methodName.IndexOf("insert")>=0)
+			    {WriteLine("int identity = -1;");} 
+			#> 
+			 <#
+			 WriteLine("NpgsqlConnection con = PgsqlDataHelper.GetConnection(this.ConnectionString);");
+             PushIndent("\t");PushIndent("\t");PushIndent("\t");
+			 WriteLine(" NpgsqlCommand cmd = new NpgsqlCommand();");
+             WriteLine(" cmd.Connection = con;\r\n");
+
+             WriteLine("try");
+             WriteLine("{");
+				PushIndent("\t");
+                WriteLine("con.Open();");
+			  	if (csDataTypeForReturnValue=="DataTable")
+				{ 
+				  WriteLine("NpgsqlTransaction t = con.BeginTransaction();"); 	
+				}
+				
+				WriteLine("string strCmd = \""+methodName+"\";");
+                WriteLine("cmd.CommandType = CommandType.StoredProcedure;");
+                WriteLine("cmd.CommandText = strCmd;\r\n");
+				
+				foreach(FuncArgItem item in funcArgInputList)
+                { 
+				   WriteLine("cmd.Parameters.Add(PgsqlDataHelper.CreateInputParam(\""+ item.ArgName + "\",DbType." + item.DbType + "," +  NamingConverter.PgFPar2Camel(item.ArgName) + "));");
+                }
+				WriteLine("");
+				
+		         if (methodName.IndexOf("insert")>=0)
+			     {  WriteLine("identity = (int)cmd.ExecuteScalar();"); }
+				 else if (csDataTypeForReturnValue=="DataTable")
+				 {WriteLine(  
+					"NpgsqlDataAdapter da = new NpgsqlDataAdapter(cmd);\r\n" +
+                    "da.Fill(dt);\r\n"+
+                    "t.Commit();");}
+				 else if (csDataTypeForReturnValue=="int")
+			     {  WriteLine("rowsAffected = (int)cmd.ExecuteScalar();"); }
+				 else if (csDataTypeForReturnValue=="string")
+			     {  WriteLine("result = (string)cmd.ExecuteScalar();"); }
+				PopIndent();PopIndent();PopIndent();PopIndent();
+				#> 
+		    }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                con.Close();
+            }
+			
+			<# if (methodName.IndexOf("insert")>=0)
+			{  WriteLine("return identity;"); } 
+			else if (csDataTypeForReturnValue=="DataTable")
+			{  WriteLine("return dt;"); }
+			else if (csDataTypeForReturnValue=="string")
+			 {WriteLine("return result;");}
+			else if (csDataTypeForReturnValue=="int")
+			{  WriteLine("return rowsAffected;"); }
+			#>  
+       }  
+       
+		//INPUT
+		<# foreach(FuncArgItem item in funcArgInputList)
+          {
+		#>
+            // <#=item.Direction#> 	 <#=item.ArgName#>  <#=item.PgDataType#>  <#=item.CsDataType#>
+		<#}#>
+		
+		//OUTPUT
+		<# foreach(FuncArgItem item in funcArgOutputList)
+          {
+		#>
+            //  <#=item.Direction#>	<#=item.ArgName#>  <#=item.PgDataType#>	// <#=item.CsDataType#>
+		<#}#>
+  	
+	
+<# Write("*/"); #>

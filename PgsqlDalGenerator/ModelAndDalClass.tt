@@ -1,0 +1,439 @@
+﻿<#@ template hostspecific="True"#>
+
+<#@ assembly name="$(SolutionDir)PgsqlMetadataExtract\bin\PgsqlMetadataExtract.dll"#>
+<#@ assembly name="$(SolutionDir)Extend.Lib.Npgsql\bin\Extend.Lib.Npgsql.dll"#>
+<#@ assembly name="$(SolutionDir)Extend.Lib.NamingConverter\bin\Extend.Lib.NamingConverter.dll"#>
+
+<#@ import namespace="PgsqlMetadataExtract"#>
+<#@ import namespace="System.Collections.Generic"#>
+<#@ import namespace="Extend.Lib.NamingConverter" #>
+
+<#
+    string tableName ="test_completes";
+	string connectionString = 
+	"Server=192.168.8.88;Port=5432;User Id=postgres;Password=1234;Database=postgres;";
+    string nameSpace = "Dal.Sample";
+	
+	ExtractTableMetadatas metadatas = new ExtractTableMetadatas(connectionString,tableName);
+#>
+
+<# Write("/*"); #>
+   
+using System;
+using System.Data;
+using Npgsql;
+using Extend.Lib.Npgsql;
+
+namespace <#=nameSpace#>
+{
+
+    public class <#=NamingConverter.Pg2Pascal(tableName)#>Model
+    {
+
+        #region < Members >
+		
+        <#int i = 1; 
+          foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			 string dataType = string.Empty;
+			 if (item.IsNullable) 
+			 { 
+				dataType = PgsqlMetadataHelper.Pg2NullableCs(item.DataType,2);
+			 }
+			 else
+			 {
+				dataType = PgsqlMetadataHelper.Pg2Cs(item.DataType);
+			 }
+		     WriteLine(dataType  + " _"  + NamingConverter.Pg2Pascal(item.ColumnName) + ";");  	
+   	         Write("\t\t");
+		  }
+		#>
+        
+		#endregion
+
+        #region < properties >
+       
+	   <#Write("\t"); 
+		  foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			string dataType = string.Empty;
+			if (item.IsNullable) 
+			{ 
+				dataType = PgsqlMetadataHelper.Pg2NullableCs(item.DataType,2);
+			}
+			else
+			{
+				dataType = PgsqlMetadataHelper.Pg2Cs(item.DataType);
+			}
+			WriteLine("public " + dataType + " " + NamingConverter.Pg2Pascal(item.ColumnName));
+             
+			WriteLine("\t\t{");
+            WriteLine("\t\t\tget { return _" + NamingConverter.Pg2Pascal(item.ColumnName) + "; }" );
+            WriteLine("\t\t\tset { _" + NamingConverter.Pg2Pascal(item.ColumnName) + " = value; } ");
+            WriteLine("\t\t}");
+			
+			Write("\t\t");
+		  }
+	   #>
+	   
+        #endregion
+
+    }
+
+
+    public class <#=NamingConverter.Pg2Pascal(tableName)#>Dal : PgsqlBusinessBase
+    {
+       
+        public <#=NamingConverter.Pg2Pascal(tableName)#>Dal(string connectionStringName): base("<#=NamingConverter.Pg2Pascal(tableName)#>")
+        {
+            this.ConnectionStringName = connectionStringName;
+        }
+     
+        public  int Insert(
+		<# Write("\t");
+		  i = 1; 
+          foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			 string dataType = string.Empty;
+			 if (item.IsNullable) 
+			 { 
+				dataType = PgsqlMetadataHelper.Pg2NullableCs(item.DataType,2);
+			 }
+			 else
+			 {
+				dataType = PgsqlMetadataHelper.Pg2Cs(item.DataType);
+			 }
+			if (metadatas.Table.TableFields.Count-1 > i)
+			{
+			  if (metadatas.Table.PrimaryKey.Trim().ToLower() != item.ColumnName.Trim().ToLower())
+			  {
+			    WriteLine(dataType  + " "  + NamingConverter.Pg2Camel(item.ColumnName) + ",");  	
+			    i++;
+				Write("\t\t\t");
+			  }
+			} 
+			else
+			{
+			   WriteLine(dataType + " "  + NamingConverter.Pg2Camel(item.ColumnName) + ")" );  
+		       Write("\t\t\t");
+			}
+		   }
+		#>
+		
+		{
+
+            int identity = -1;
+            
+            NpgsqlConnection con = PgsqlDataHelper.GetConnection(this.ConnectionStringName);
+            NpgsqlCommand cmd = new NpgsqlCommand();
+            cmd.Connection = con;
+
+            try
+            {
+                con.Open();
+
+                string strCmd = "<#=tableName#>_insert";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = strCmd;
+				
+                <#
+		         foreach (TableField item in metadatas.Table.TableFields)
+		         {
+				  if (metadatas.Table.PrimaryKey.Trim().ToLower() != item.ColumnName.Trim().ToLower())
+				  {
+				    WriteLine("cmd.Parameters.Add(PgsqlDataHelper.CreateInputParam(\""+"p_" + item.ColumnName  + "\", DbType."+ PgsqlMetadataHelper.Pg2DbType(item.DataType) +", "  +  NamingConverter.Pg2Camel(item.ColumnName) + "));");  	
+				    Write("\t\t\t\t");
+				  }
+				 }
+				#>
+			    
+                identity = (int)cmd.ExecuteScalar();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                con.Close();
+            }
+
+            return identity;
+        }
+
+        public  int UpdateByPK(
+		<#i=1;Write("\t");
+          foreach (TableField item in metadatas.Table.TableFields)
+          {	
+			 string dataType = string.Empty;
+			 if (item.IsNullable) 
+			 { 
+				dataType = PgsqlMetadataHelper.Pg2NullableCs(item.DataType,2);
+			 }
+			 else
+			 {
+				dataType = PgsqlMetadataHelper.Pg2Cs(item.DataType);
+			 }
+			if (metadatas.Table.TableFields.Count-1 >= i)
+			{
+			    WriteLine(dataType  + " "  + NamingConverter.Pg2Camel(item.ColumnName) + ",");  	
+			    i++;
+			} 
+			else
+			{
+			   WriteLine(dataType + " "  + NamingConverter.Pg2Camel(item.ColumnName) + ")" );  
+		    }
+			Write("\t\t\t");
+		   }
+		#>
+		
+        {
+            int rowsAffected = 0;
+
+            NpgsqlConnection con = PgsqlDataHelper.GetConnection(this.ConnectionStringName);
+            NpgsqlCommand cmd = new NpgsqlCommand();
+            cmd.Connection = con;
+
+            try
+            {
+                con.Open();
+
+                string strCmd = "<#=tableName#>_update_by_pk";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = strCmd;
+
+                <#
+		        foreach (TableField item in metadatas.Table.TableFields)
+		        {	
+				   WriteLine("cmd.Parameters.Add(PgsqlDataHelper.CreateInputParam(\""+"p_"+item.ColumnName  + "\", DbType."+ PgsqlMetadataHelper.Pg2DbType(item.DataType) +", "  +  NamingConverter.Pg2Camel(item.ColumnName) + "));");  	
+				   Write("\t\t\t\t");
+				}
+				#>
+
+                rowsAffected = (int)cmd.ExecuteScalar();
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                con.Close();
+            }
+
+            return rowsAffected;
+        }
+        
+        public  int DeleteByPK(
+		        <#=PgsqlMetadataHelper.Pg2Cs(metadatas.GetDataTypeByColumnName(metadatas.Table.PrimaryKey))#> <#=NamingConverter.Pg2Camel(metadatas.Table.PrimaryKey)#>)
+        {
+            int rowsAffected = 0;
+
+            NpgsqlConnection con = PgsqlDataHelper.GetConnection(this.ConnectionStringName);
+            NpgsqlCommand cmd = new NpgsqlCommand();
+            cmd.Connection = con;
+
+            try
+            {
+                con.Open();
+
+                string strCmd = "<#=tableName#>_delete_by_pk";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = strCmd;
+                
+				<#
+				WriteLine("cmd.Parameters.Add(PgsqlDataHelper.CreateInputParam(\""+"p_"+ metadatas.Table.PrimaryKey  + "\", DbType."+ PgsqlMetadataHelper.Pg2DbType(metadatas.GetDataTypeByColumnName(metadatas.Table.PrimaryKey)) +", "  +  NamingConverter.Pg2Camel(metadatas.Table.PrimaryKey) + "));"); 
+                #>
+                rowsAffected = (int)cmd.ExecuteScalar();
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                con.Close();
+            }
+
+            return rowsAffected;
+        }
+
+
+        public DataTable GetByID(
+			   string <#=NamingConverter.ConvertPK2ID(NamingConverter.Pg2Camel(metadatas.Table.PrimaryKey),true)#>, MatchOptions matchOptions)
+        {
+            DataTable dt = new DataTable();
+
+            NpgsqlConnection con = PgsqlDataHelper.GetConnection(this.ConnectionStringName);
+            NpgsqlCommand cmd = new NpgsqlCommand();
+            cmd.Connection = con;
+
+            try
+            {
+                con.Open();
+
+                NpgsqlTransaction t = con.BeginTransaction();
+
+                string strCmd = "<#=tableName#>_get_by_id";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = strCmd;
+
+                cmd.Parameters.Add(PgsqlDataHelper.CreateInputParam("p_<#=NamingConverter.ConvertPK2ID(NamingConverter.Pg2Camel(metadatas.Table.PrimaryKey),true)#>", DbType.String, <#=NamingConverter.ConvertPK2ID(NamingConverter.Pg2Camel(metadatas.Table.PrimaryKey),true)#>));
+                cmd.Parameters.Add(PgsqlDataHelper.CreateInputParam("p_match_options", DbType.String, matchOptions.ToString()));
+
+                NpgsqlDataAdapter da = new NpgsqlDataAdapter(cmd);
+                da.Fill(dt);
+
+                t.Commit();
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                con.Close();
+            }
+
+            return dt;
+        }
+
+        public DataTable GetByPK(
+		       <#=PgsqlMetadataHelper.Pg2Cs(metadatas.GetDataTypeByColumnName(metadatas.Table.PrimaryKey))#> <#=NamingConverter.Pg2Camel(metadatas.Table.PrimaryKey)#>)
+        {
+            DataTable dt = new DataTable();
+
+            NpgsqlConnection con = PgsqlDataHelper.GetConnection(this.ConnectionStringName);
+            NpgsqlCommand cmd = new NpgsqlCommand();
+            cmd.Connection = con;
+
+            try
+            {
+                con.Open();
+
+                NpgsqlTransaction t = con.BeginTransaction();
+
+                string strCmd = "<#=tableName#>_get_by_pk";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = strCmd;
+
+                <#
+				WriteLine("cmd.Parameters.Add(PgsqlDataHelper.CreateInputParam(\""+"p_"+ metadatas.Table.PrimaryKey  + "\", DbType."+ PgsqlMetadataHelper.Pg2DbType(metadatas.GetDataTypeByColumnName(metadatas.Table.PrimaryKey)) +", "  +  NamingConverter.Pg2Camel(metadatas.Table.PrimaryKey) + "));"); 
+                #>
+             
+                NpgsqlDataAdapter da = new NpgsqlDataAdapter(cmd);
+                da.Fill(dt);
+
+                t.Commit();
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                con.Close();
+            }
+
+            return dt;
+        }
+
+
+        public bool GetRowByPK(
+		       <#=PgsqlMetadataHelper.Pg2Cs(metadatas.GetDataTypeByColumnName(metadatas.Table.PrimaryKey))#> <#=NamingConverter.Pg2Camel(metadatas.Table.PrimaryKey)#>, 
+			   ref <#=NamingConverter.Pg2Pascal(tableName)#>Model model, 
+			   bool isConvertNull)
+        {
+           
+            DataTable dt = this.GetByPK(<#=NamingConverter.Pg2Camel(metadatas.Table.PrimaryKey)#>);
+            if (dt == null || dt.Rows.Count == 0) return false;
+
+            DataRow row = dt.Rows[0];
+            GetRow(row, ref model, isConvertNull);
+
+            return true;
+        }
+
+        public bool GetRowByID(
+		       string <#=NamingConverter.ConvertPK2ID(NamingConverter.Pg2Camel(metadatas.Table.PrimaryKey),true)#>, 
+			   ref <#=NamingConverter.Pg2Pascal(tableName)#>Model model, 
+			   bool isConvertNull)
+        {
+           
+            DataTable dt = this.GetByID(<#=NamingConverter.ConvertPK2ID(NamingConverter.Pg2Camel(metadatas.Table.PrimaryKey),true)#>, MatchOptions.Exact);
+            if (dt == null || dt.Rows.Count == 0) return false;
+                
+            DataRow row = dt.Rows[0];
+            GetRow(row, ref model, isConvertNull);
+
+            return true;
+        }
+
+        public void GetRow(DataRow row, ref <#=NamingConverter.Pg2Pascal(tableName)#>Model model, bool isconvertnull)
+        {
+		    
+			<#
+				foreach (TableField item in metadatas.Table.TableFields)
+		        {	
+				   
+				   if (item.IsNullable) 
+				   {
+					  WriteLine("if (isconvertnull) model." + NamingConverter.Pg2Pascal(item.ColumnName) + " = row.IsNull(\"" + item.ColumnName + "\") ? null : " + PgsqlMetadataHelper.Pg2NullableCs(item.DataType,1) +"Convert.To" + PgsqlMetadataHelper.Pg2DbType(item.DataType) +"(row[\""+ item.ColumnName +"\"]);");
+			          WriteLine("\t\t\telse model." +  NamingConverter.Pg2Pascal(item.ColumnName) + " = row.IsNull(\"" + item.ColumnName + "\") ? "+ PgsqlMetadataHelper.Pg2DefaultValueCs(item.DataType) + " : " + PgsqlMetadataHelper.Pg2NullableCs(item.DataType,1) + "Convert.To"+ PgsqlMetadataHelper.Pg2DbType(item.DataType) +"(row[\""+ item.ColumnName +"\"]);");
+				   }
+				   else
+				   {
+					  WriteLine("model."+ NamingConverter.Pg2Pascal(item.ColumnName) + " = Convert.To"+ PgsqlMetadataHelper.Pg2DbType(item.DataType) + "(row[\"" + item.ColumnName + "\"]);");
+				   }
+				   Write("\t\t\t");
+				}
+			#>
+			
+		}
+		
+		
+        public DataTable <#=NamingConverter.Pg2Pascal(tableName)#>GetAll(
+		string orderBy)
+        {
+		     DataTable dt = new DataTable();
+ 
+			 NpgsqlConnection con = PgsqlDataHelper.GetConnection(this.ConnectionString);
+			 NpgsqlCommand cmd = new NpgsqlCommand();
+			 cmd.Connection = con;
+
+			try
+			{
+				con.Open();
+				NpgsqlTransaction t = con.BeginTransaction();
+				string strCmd = "<#=tableName#>_get_all";
+				cmd.CommandType = CommandType.StoredProcedure;
+				cmd.CommandText = strCmd;
+
+				cmd.Parameters.Add(PgsqlDataHelper.CreateInputParam("p_order_by",DbType.String,orderBy));
+
+				NpgsqlDataAdapter da = new NpgsqlDataAdapter(cmd);
+				da.Fill(dt);
+				t.Commit();
+ 
+		    }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                con.Close();
+            }
+			
+			return dt;
+  
+       }  
+       
+    }
+}
+   
+<# Write("*/"); #>

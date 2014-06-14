@@ -1,0 +1,14 @@
+G:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.Npgsql\bin\Extend.Lib.Npgsql.dll
+G:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.Npgsql\bin\Extend.Lib.Npgsql.pdb
+G:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.Npgsql\bin\Extend.Lib.Common.dll
+G:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.Npgsql\bin\Extend.Lib.Common.pdb
+G:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.Npgsql\obj\Release\ResolveAssemblyReference.cache
+G:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.Npgsql\obj\Release\Extend.Lib.Npgsql.dll
+G:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.Npgsql\obj\Release\Extend.Lib.Npgsql.pdb
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.Npgsql\bin\Extend.Lib.Npgsql.dll
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.Npgsql\bin\Extend.Lib.Npgsql.pdb
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.Npgsql\bin\Extend.Lib.Common.dll
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.Npgsql\bin\Extend.Lib.Common.pdb
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.Npgsql\obj\Release\ResolveAssemblyReference.cache
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.Npgsql\obj\Release\Extend.Lib.Npgsql.dll
+H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.Npgsql\obj\Release\Extend.Lib.Npgsql.pdb
