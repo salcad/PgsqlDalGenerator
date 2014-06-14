@@ -1,9 +1,0 @@
-H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.NamingConverter\obj\Release\ResolveAssemblyReference.cache
-H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.NamingConverter\bin\Extend.Lib.NamingConverter.dll
-H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.NamingConverter\bin\Extend.Lib.NamingConverter.pdb
-H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.NamingConverter\obj\Release\Extend.Lib.NamingConverter.dll
-H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\Extend.Lib.NamingConverter\obj\Release\Extend.Lib.NamingConverter.pdb
-D:\ProjLabPostgreSQL\PgsqlDalGenerator\Extend.Lib.NamingConverter\bin\Extend.Lib.NamingConverter.dll
-D:\ProjLabPostgreSQL\PgsqlDalGenerator\Extend.Lib.NamingConverter\bin\Extend.Lib.NamingConverter.pdb
-D:\ProjLabPostgreSQL\PgsqlDalGenerator\Extend.Lib.NamingConverter\obj\Release\Extend.Lib.NamingConverter.dll
-D:\ProjLabPostgreSQL\PgsqlDalGenerator\Extend.Lib.NamingConverter\obj\Release\Extend.Lib.NamingConverter.pdb

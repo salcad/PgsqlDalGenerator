@@ -1,9 +1,0 @@
-H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlMetadataExtract\obj\Release\ResolveAssemblyReference.cache
-H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlMetadataExtract\bin\PgsqlMetadataExtract.dll
-H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlMetadataExtract\bin\PgsqlMetadataExtract.pdb
-H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlMetadataExtract\bin\Extend.Lib.Npgsql.dll
-H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlMetadataExtract\bin\Extend.Lib.Common.dll
-H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlMetadataExtract\bin\Extend.Lib.Npgsql.pdb
-H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlMetadataExtract\bin\Extend.Lib.Common.pdb
-H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlMetadataExtract\obj\Release\PgsqlMetadataExtract.dll
-H:\ProjLabPostgreSQL\Labs\PgFuncCallerGen\PgsqlMetadataExtract\obj\Release\PgsqlMetadataExtract.pdb
