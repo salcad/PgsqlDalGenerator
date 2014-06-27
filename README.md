@@ -4,5 +4,9 @@ PgsqlDalGenerator
 Using PgsqlDalGenerator you can generate Function Caller Method,
 CRUD DAL Class, CRUD Stored Procedure
 
-It works with Postgresql 7.x and 8.x and 9.x.
+PgsqlDalGenerator use T4 text template which is a mixture of text blocks 
+and control logic that can generate a text file and it can generate any kind 
+of text file, not just code.   
+
+
 
